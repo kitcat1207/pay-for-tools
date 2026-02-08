@@ -19,16 +19,27 @@
 
 ## 快速开始
 
+### 1. 安装依赖
+
 ```bash
-# 安装依赖
 pip install -r requirements.txt
-
-# 运行服务
-python app.py
-
-# 访问
-http://localhost:5007
 ```
+
+### 2. 初始化数据库
+
+```bash
+python init_db.py
+```
+
+### 3. 运行服务
+
+```bash
+python app.py
+```
+
+### 4. 访问
+
+http://localhost:5007
 
 ## 部署
 
@@ -43,6 +54,12 @@ http://localhost:5007
 - 日用百货
 - 软件开发
 - 其他
+
+## 数据库结构
+
+查看 `schema.sql` 了解数据库结构。
+
+使用 `init_db.py` 初始化数据库。
 
 ## License
 
