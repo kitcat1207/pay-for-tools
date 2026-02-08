@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数豆科技研发支出统计系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            font-size: 18px;
+            line-height: 1.7;
+            background: #FFFFFF;
+            color: #1A1A1A;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+        
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+        }
+        
+        nav h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #009674;
+        }
+        
+        nav .links {
+            display: flex;
+            gap: 40px;
+        }
+        
+        nav a {
+            color: #1A1A1A;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            transition: color 0.2s;
+        }
+        
+        nav a:hover {
+            color: #009674;
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 128px 0 80px;
+        }
+        
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
+        }
+        
+        .hero h2 {
+            font-size: 72px;
+            font-weight: 700;
+            color: #009674;
+            line-height: 1.1;
+            margin-bottom: 32px;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            color: #1A1A1A;
+            line-height: 1.6;
+            margin-bottom: 48px;
+        }
+        
+        .hero-stats {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+        
+        .hero-stat {
+            text-align: center;
+        }
+        
+        .hero-stat-value {
+            font-size: 40px;
+            font-weight: 700;
+            color: #009674;
+        }
+        
+        .hero-stat-label {
+            font-size: 16px;
+            color: #1A1A1A;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+        
+        .divider {
+            width: 1px;
+            height: 64px;
+            background: #009674;
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border: 2px solid #F2FFF6;
+            position: relative;
+        }
+        
+        .chart-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #009674;
+            margin-bottom: 24px;
+        }
+        
+        .chart {
+            height: 400px;
+            display: flex;
+            align-items: flex-end;
+            gap: 20px;
+            padding: 20px 0;
+            border-bottom: 2px solid #009674;
+            position: relative;
+        }
+        
+        .chart-bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chart-bars {
+            display: flex;
+            gap: 4px;
+            align-items: flex-end;
+            height: 320px;
+        }
+        
+        .chart-bar {
+            width: 30px;
+            background: #009674;
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .chart-bar.secondary {
+            background: #009674;
+        }
+        
+        .chart-bar:hover {
+            opacity: 0.8;
+        }
+        
+        .chart-bar-value {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 700;
+            color: #009674;
+            white-space: nowrap;
+        }
+        
+        .chart-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1A1A1A;
+            text-align: center;
+        }
+        
+        .chart-legend {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        .avg-card {
+            position: absolute;
+            bottom: -32px;
+            left: -32px;
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border: 2px solid #009674;
+            max-width: 240px;
+        }
+        
+        .avg-card-label {
+            font-size: 16px;
+            color: #1A1A1A;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .avg-card-value {
+            font-size: 30px;
+            font-weight: 700;
+            color: #009674;
+        }
+        
+        /* Service Cards */
+        .services {
+            padding: 80px 0;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+        
+        .service-card {
+            padding: 40px;
+            border-radius: 16px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .service-card:hover {
+            transform: scale(1.03);
+            border-color: #009674;
+        }
+        
+        .service-card.blue {
+            background: #F2FFF6;
+        }
+        
+        .service-card.green {
+            background: #F2FFF6;
+        }
+        
+        .service-card.accent {
+            background: #F2FFF6;
+        }
+        
+        .service-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 24px;
+        }
+        
+        .service-title {
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #1A1A1A;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        
+        .service-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #009674;
+            margin-bottom: 12px;
+        }
+        
+        .service-desc {
+            font-size: 16px;
+            color: #1A1A1A;
+            font-weight: 500;
+        }
+        
+        /* Month Section */
+        .expenses {
+            padding: 80px 0;
+        }
+        
+        .section-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #009674;
+            text-align: center;
+            margin-bottom: 64px;
+        }
+        
+        .month-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            border: 2px solid #F2FFF6;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+        
+        .month-header {
+            background: #009674;
+            padding: 32px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .month-title {
+            font-size: 30px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .month-total {
+            font-size: 40px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .category-bar {
+            background: #F2FFF6;
+            padding: 24px 40px;
+            border-bottom: 2px solid #F2FFF6;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        
+        .category-item {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1A1A1A;
+        }
+        
+        .category-item strong {
+            font-weight: 700;
+        }
+        
+        .category-item .amount {
+            color: #009674;
+            margin-left: 12px;
+        }
+        
+        .expense-item {
+            padding: 32px 40px;
+            border-bottom: 2px solid #F5F5F5;
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            gap: 32px;
+            align-items: start;
+            transition: background 0.2s;
+        }
+        
+        .expense-item:hover {
+            background: #F2FFF6;
+        }
+        
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+        
+        .expense-img {
+            width: 120px;
+            height: 112px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 2px solid #F2FFF6;
+        }
+        
+        .expense-img.placeholder {
+            background: #F2FFF6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .expense-info h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #009674;
+            margin-bottom: 12px;
+        }
+        
+        .expense-desc {
+            font-size: 16px;
+            color: #1A1A1A;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+        
+        .expense-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 14px;
+            color: #1A1A1A;
+            font-weight: 500;
+        }
+        
+        .expense-category {
+            background: #009674;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .expense-amount {
+            font-size: 30px;
+            font-weight: 700;
+            color: #009674;
+            text-align: right;
+        }
+        
+        .expense-remark {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .remark-text {
+            background: #F2FFF6;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #666666;
+            font-weight: 400;
+            border: 1px solid #F2FFF6;
+            flex: 1;
+        }
+        
+        .btn-edit {
+            background: #F2FFF6;
+            color: #009674;
+            border: 1px solid #F2FFF6;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-edit:hover {
+            background: #E8F5E9;
+            border-color: #009674;
+        }
+        
+        /* Footer */
+        footer {
+            background: #009674;
+            padding: 64px 0;
+            margin-top: 80px;
+            text-align: center;
+        }
+        
+        footer p {
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-grid,
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero h2 {
+                font-size: 48px;
+            }
+            
+            .expense-item {
+                grid-template-columns: 1fr;
+            }
+            
+            nav .links {
+                display: none;
+            }
+        }
+        
+        /* Remark Edit Styles */
+        .remark-edit {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .remark-input {
+            padding: 8px 12px;
+            border: 1px solid #E5E5E5;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 400;
+            color: #1A1A1A;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+        
+        .remark-input:focus {
+            outline: none;
+            border-color: #009674;
+        }
+        
+        .remark-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-save,
+        .btn-cancel {
+            padding: 6px 14px;
+            border: 1px solid #F2FFF6;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        
+        .btn-save {
+            background: #F2FFF6;
+            color: #009674;
+        }
+        
+        .btn-save:hover {
+            background: #E8F5E9;
+            border-color: #009674;
+        }
+        
+        .btn-cancel {
+            background: #FFFFFF;
+            color: #666666;
+            border: 1px solid #E5E5E5;
+        }
+        
+        .btn-cancel:hover {
+            background: #F5F5F5;
+            border-color: #CCCCCC;
+        }
+        
+        .remark-text {
+            flex: 1;
+        }
+        
+        /* Image Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            font-weight: 300;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .modal-close:hover {
+            opacity: 0.7;
+        }
+        
+        /* Category Edit */
+        .category-edit {
+            display: inline-block;
+            position: relative;
+        }
+        
+        .category-select {
+            background: #009674;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            appearance: none;
+            padding-right: 24px;
+        }
+        
+        .category-select:focus {
+            outline: 2px solid #007A5E;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <h1>数豆科技</h1>
+            <div class="links">
+                <a href="#overview">概览</a>
+                <a href="#expenses">支出记录</a>
+                <a href="#stats">统计分析</a>
+            </div>
+        </div>
+    </nav>
+    
+    <section class="hero">
+        <div class="container">
+            <div class="hero-grid">
+                <div>
+                    <h2>研发支出<br>统计系统</h2>
+                    <p>为研发投入提供清晰的数据洞察</p>
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <div class="hero-stat-value" id="total-count">0</div>
+                            <div class="hero-stat-label">消费笔数</div>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-value" id="total-amount">¥0.00</div>
+                            <div class="hero-stat-label">总支出</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3 class="chart-title">月度支出趋势</h3>
+                    <div class="chart" id="chart"></div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #009674;"></div>
+                            <span>月度支出 (¥)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #009674;"></div>
+                            <span>消费笔数</span>
+                        </div>
+                    </div>
+                    <div class="avg-card">
+                        <div class="avg-card-label">平均支出</div>
+                        <div class="avg-card-value" id="avg-amount">¥0.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="services" id="overview">
+        <div class="container">
+            <div class="services-grid">
+                <div class="service-card blue">
+                    <svg class="service-icon" fill="none" stroke="#009674" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <div class="service-title">总支出</div>
+                    <div class="service-value" id="service-total">¥0.00</div>
+                    <div class="service-desc">累计研发投入金额</div>
+                </div>
+                
+                <div class="service-card green">
+                    <svg class="service-icon" fill="none" stroke="#009674" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <div class="service-title">消费笔数</div>
+                    <div class="service-value" id="service-count">0</div>
+                    <div class="service-desc">记录的交易数量</div>
+                </div>
+                
+                <div class="service-card accent">
+                    <svg class="service-icon" fill="none" stroke="#009674" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <div class="service-title">平均支出</div>
+                    <div class="service-value" id="service-avg">¥0.00</div>
+                    <div class="service-desc">单笔平均消费金额</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="expenses" id="expenses">
+        <div class="container">
+            <h2 class="section-title">支出记录</h2>
+            <div id="expense-list"></div>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="container">
+            <p>© 2026 数豆科技研发支出统计系统</p>
+        </div>
+    </footer>
+    
+    <script>
+        // 加载统计数据
+        fetch('/api/stats')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('total-count').textContent = data.total_count;
+                document.getElementById('total-amount').textContent = '¥' + data.total_amount.toFixed(2);
+                document.getElementById('avg-amount').textContent = '¥' + data.avg_amount.toFixed(2);
+                document.getElementById('service-total').textContent = '¥' + data.total_amount.toFixed(2);
+                document.getElementById('service-count').textContent = data.total_count;
+                document.getElementById('service-avg').textContent = '¥' + data.avg_amount.toFixed(2);
+            });
+        
+        // 加载支出记录和图表
+        fetch('/api/expenses')
+            .then(r => r.json())
+            .then(data => {
+                // 渲染图表
+                renderChart(data.stats);
+                
+                // 渲染支出列表
+                renderExpenses(data.stats, data.expenses);
+            });
+        
+        function renderChart(stats) {
+            const chart = document.getElementById('chart');
+            const months = Object.keys(stats).sort();
+            
+            if (months.length === 0) return;
+            
+            // 找出最大值用于缩放
+            const maxAmount = Math.max(...months.map(m => stats[m].total));
+            const maxCount = Math.max(...months.map(m => stats[m].count));
+            
+            months.forEach(month => {
+                const group = document.createElement('div');
+                group.className = 'chart-bar-group';
+                
+                const bars = document.createElement('div');
+                bars.className = 'chart-bars';
+                
+                // 金额柱
+                const amountBar = document.createElement('div');
+                amountBar.className = 'chart-bar';
+                const amountHeight = (stats[month].total / maxAmount) * 100;
+                amountBar.style.height = amountHeight + '%';
+                
+                const amountValue = document.createElement('div');
+                amountValue.className = 'chart-bar-value';
+                amountValue.textContent = '¥' + stats[month].total.toFixed(0);
+                amountBar.appendChild(amountValue);
+                
+                // 笔数柱
+                const countBar = document.createElement('div');
+                countBar.className = 'chart-bar secondary';
+                const countHeight = (stats[month].count / maxCount) * 100;
+                countBar.style.height = countHeight + '%';
+                
+                const countValue = document.createElement('div');
+                countValue.className = 'chart-bar-value';
+                countValue.textContent = stats[month].count + '笔';
+                countBar.appendChild(countValue);
+                
+                bars.appendChild(amountBar);
+                bars.appendChild(countBar);
+                
+                const label = document.createElement('div');
+                label.className = 'chart-label';
+                label.textContent = month + '月';
+                
+                group.appendChild(bars);
+                group.appendChild(label);
+                chart.appendChild(group);
+            });
+        }
+        
+        function renderExpenses(stats, expenses) {
+            const container = document.getElementById('expense-list');
+            const months = Object.keys(stats).sort().reverse();
+            
+            months.forEach(month => {
+                const monthCard = document.createElement('div');
+                monthCard.className = 'month-card';
+                
+                // 月份头部
+                const header = document.createElement('div');
+                header.className = 'month-header';
+                header.innerHTML = `
+                    <div class="month-title">${month}月</div>
+                    <div class="month-total">¥${stats[month].total.toFixed(2)}</div>
+                `;
+                monthCard.appendChild(header);
+                
+                // 分类统计
+                const categoryBar = document.createElement('div');
+                categoryBar.className = 'category-bar';
+                Object.entries(stats[month].categories).forEach(([cat, amount]) => {
+                    const item = document.createElement('div');
+                    item.className = 'category-item';
+                    item.innerHTML = `<strong>${cat}</strong><span class="amount">¥${amount.toFixed(2)}</span>`;
+                    categoryBar.appendChild(item);
+                });
+                monthCard.appendChild(categoryBar);
+                
+                // 支出列表 - 按时间倒序排列（最新的在上面）
+                const monthExpenses = expenses
+                    .filter(e => e.pay_time.startsWith(month))
+                    .sort((a, b) => b.pay_time.localeCompare(a.pay_time));
+                
+                monthExpenses.forEach(expense => {
+                    const item = document.createElement('div');
+                    item.className = 'expense-item';
+                    
+                    const img = expense.screenshot_path 
+                        ? `<img src="/screenshots/${expense.screenshot_path}" class="expense-img" alt="截图" onclick="showModal('/screenshots/${expense.screenshot_path}')" style="cursor: pointer;">`
+                        : `<div class="expense-img placeholder">无图</div>`;
+                    
+                    const remarkDisplay = expense.remark 
+                        ? `<div class="expense-remark" id="remark-display-${expense.id}">
+                               <span class="remark-text">${expense.remark}</span>
+                               <button class="btn-edit" onclick="editRemark(${expense.id})">编辑</button>
+                           </div>`
+                        : `<div class="expense-remark" id="remark-display-${expense.id}">
+                               <button class="btn-edit" onclick="editRemark(${expense.id})">添加备注</button>
+                           </div>`;
+                    
+                    const remarkEdit = `
+                        <div class="remark-edit" id="remark-edit-${expense.id}" style="display: none;">
+                            <input type="text" class="remark-input" id="remark-input-${expense.id}" 
+                                   value="${expense.remark || ''}" placeholder="输入备注信息...">
+                            <div class="remark-actions">
+                                <button class="btn-save" onclick="saveRemark(${expense.id})">保存</button>
+                                <button class="btn-cancel" onclick="cancelEdit(${expense.id})">取消</button>
+                            </div>
+                        </div>`;
+                    
+                    item.innerHTML = `
+                        ${img}
+                        <div class="expense-info">
+                            <h3>${expense.merchant_name}</h3>
+                            <div class="expense-desc">${expense.product_description || '无商品说明'}</div>
+                            <div class="expense-meta">
+                                <span>${expense.pay_time}</span>
+                                ${expense.order_no ? `<span>${expense.order_no.substring(0, 20)}...</span>` : ''}
+                                <span class="category-edit">
+                                    <select class="category-select" onchange="updateCategory(${expense.id}, this.value)">
+                                        <option value="API/AI服务" ${expense.category === 'API/AI服务' ? 'selected' : ''}>API/AI服务</option>
+                                        <option value="云服务" ${expense.category === '云服务' ? 'selected' : ''}>云服务</option>
+                                        <option value="数码配件" ${expense.category === '数码配件' ? 'selected' : ''}>数码配件</option>
+                                        <option value="软件开发" ${expense.category === '软件开发' ? 'selected' : ''}>软件开发</option>
+                                        <option value="日用百货" ${expense.category === '日用百货' ? 'selected' : ''}>日用百货</option>
+                                        <option value="其它" ${expense.category === '其它' ? 'selected' : ''}>其它</option>
+                                    </select>
+                                </span>
+                            </div>
+                            ${remarkDisplay}
+                            ${remarkEdit}
+                        </div>
+                        <div class="expense-amount">-¥${expense.amount.toFixed(2)}</div>
+                    `;
+                    
+                    monthCard.appendChild(item);
+                });
+                
+                container.appendChild(monthCard);
+            });
+        }
+        
+        // 备注编辑功能
+        function editRemark(id) {
+            document.getElementById("remark-display-" + id).style.display = "none";
+            document.getElementById("remark-edit-" + id).style.display = "flex";
+            document.getElementById("remark-input-" + id).focus();
+        }
+        
+        function cancelEdit(id) {
+            document.getElementById("remark-edit-" + id).style.display = "none";
+            document.getElementById("remark-display-" + id).style.display = "flex";
+        }
+        
+        async function saveRemark(id) {
+            const input = document.getElementById("remark-input-" + id);
+            const remark = input.value.trim();
+            
+            try {
+                const response = await fetch("/api/expense/" + id + "/remark", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ remark: remark })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const displayDiv = document.getElementById("remark-display-" + id);
+                    if (remark) {
+                        displayDiv.innerHTML = `
+                            <span class="remark-text">${remark}</span>
+                            <button class="btn-edit" onclick="editRemark(${id})">编辑</button>
+                        `;
+                    } else {
+                        displayDiv.innerHTML = `
+                            <button class="btn-edit" onclick="editRemark(${id})">添加备注</button>
+                        `;
+                    }
+                    cancelEdit(id);
+                } else {
+                    alert("保存失败，请重试");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("保存失败，请重试");
+            }
+        }
+        
+        // 图片放大功能
+        function showModal(src) {
+            document.getElementById("modalImage").src = src;
+            document.getElementById("imageModal").classList.add("active");
+        }
+        
+        function closeModal() {
+            document.getElementById("imageModal").classList.remove("active");
+        }
+        
+        // ESC键关闭模态框
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape") closeModal();
+        });
+        
+        // 更新分类
+        async function updateCategory(id, category) {
+            try {
+                const response = await fetch("/api/expense/" + id + "/category", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ category: category })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 刷新页面以更新统计数据
+                    location.reload();
+                } else {
+                    alert("更新失败，请重试");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("更新失败，请重试");
+            }
+        }
+    </script>
+    
+    <!-- Image Modal -->
+    <div class="modal" id="imageModal" onclick="closeModal()">
+        <span class="modal-close">&times;</span>
+        <img src="" alt="大图" id="modalImage">
+    </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# Database
+*.db
+*.db-journal
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+
+# Logs
+*.log
+nohup.out
+
+# Uploads
+file_*---*.jpg
+file_*---*.png
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数豆科技研发支出统计系统</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Lora (Serif) + Raleway -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Raleway', sans-serif;
+            font-size: 18px;
+            line-height: 1.7;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Lora', serif;
+            font-weight: 700;
+        }
+        
+        /* Custom Tailwind Config - Enhanced Contrast */
+        @layer utilities {
+            .text-primary { color: #1B4332; }
+            .text-secondary { color: #2D6A4F; }
+            .text-body { color: #1A1A1A; }
+            .bg-primary { background-color: #1B4332; }
+            .bg-secondary { background-color: #2D6A4F; }
+            .bg-soft-green { background-color: #E8F5E9; }
+            .bg-soft-pink { background-color: #FCE4EC; }
+            .bg-soft-beige { background-color: #FFF8E1; }
+            .border-primary { border-color: #1B4332; }
+            .border-secondary { border-color: #2D6A4F; }
+            .hover-primary:hover { background-color: #0F2419; }
+        }
+        
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Navigation backdrop blur */
+        .nav-blur {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        
+        /* Hero image aspect ratio */
+        .hero-image {
+            aspect-ratio: 4/5;
+            object-fit: cover;
+        }
+        
+        /* Card hover effect */
+        .service-card {
+            transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .service-card:hover {
+            transform: scale(1.03);
+        }
+        
+        /* Expense item hover */
+        .expense-row {
+            transition: background-color 200ms ease;
+        }
+        
+        .expense-row:hover {
+            background-color: #F9FAFB;
+        }
+    </style>
+</head>
+<body class="bg-white text-body antialiased">
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Navigation Component
+        function Navigation() {
+            const [isScrolled, setIsScrolled] = useState(false);
+            
+            useEffect(() => {
+                const handleScroll = () => {
+                    setIsScrolled(window.scrollY > 20);
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+            
+            return (
+                <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+                    isScrolled ? 'bg-white shadow-md' : 'bg-white'
+                }`}>
+                    <div className="max-w-7xl mx-auto px-8 py-6">
+                        <div className="flex items-center justify-between">
+                            <h1 className="text-3xl font-bold text-primary">数豆科技</h1>
+                            <div className="hidden md:flex items-center space-x-10">
+                                <a href="#overview" className="text-base font-medium text-body hover:text-primary transition-colors">概览</a>
+                                <a href="#expenses" className="text-base font-medium text-body hover:text-primary transition-colors">支出记录</a>
+                                <a href="#stats" className="text-base font-medium text-body hover:text-primary transition-colors">统计分析</a>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            );
+        }
+        
+        // Hero Section Component with Chart
+        function HeroSection({ stats, monthlyData }) {
+            const chartRef = React.useRef(null);
+            const chartInstance = React.useRef(null);
+            
+            useEffect(() => {
+                if (chartRef.current && Object.keys(monthlyData).length > 0) {
+                    const ctx = chartRef.current.getContext('2d');
+                    
+                    // 销毁旧图表
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                    
+                    // 准备数据
+                    const months = Object.keys(monthlyData).sort();
+                    const totals = months.map(m => monthlyData[m].total);
+                    const counts = months.map(m => monthlyData[m].count);
+                    
+                    // 创建新图表
+                    chartInstance.current = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: months.map(m => m + '月'),
+                            datasets: [
+                                {
+                                    label: '月度支出 (¥)',
+                                    data: totals,
+                                    backgroundColor: '#1B4332',
+                                    borderColor: '#1B4332',
+                                    borderWidth: 2,
+                                    borderRadius: 8,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: '消费笔数',
+                                    data: counts,
+                                    backgroundColor: '#2D6A4F',
+                                    borderColor: '#2D6A4F',
+                                    borderWidth: 2,
+                                    borderRadius: 8,
+                                    yAxisID: 'y1'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                    labels: {
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold',
+                                            family: 'Raleway'
+                                        },
+                                        color: '#1A1A1A',
+                                        padding: 20,
+                                        usePointStyle: true,
+                                        pointStyle: 'rectRounded'
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: '#1B4332',
+                                    titleColor: '#FFFFFF',
+                                    bodyColor: '#FFFFFF',
+                                    titleFont: {
+                                        size: 16,
+                                        weight: 'bold',
+                                        family: 'Lora'
+                                    },
+                                    bodyFont: {
+                                        size: 14,
+                                        family: 'Raleway'
+                                    },
+                                    padding: 16,
+                                    cornerRadius: 8,
+                                    displayColors: true,
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                if (context.datasetIndex === 0) {
+                                                    label += '¥' + context.parsed.y.toFixed(2);
+                                                } else {
+                                                    label += context.parsed.y + ' 笔';
+                                                }
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold',
+                                            family: 'Raleway'
+                                        },
+                                        color: '#1A1A1A'
+                                    }
+                                },
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: '支出金额 (¥)',
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold',
+                                            family: 'Raleway'
+                                        },
+                                        color: '#1B4332'
+                                    },
+                                    grid: {
+                                        color: '#E5E5E5',
+                                        lineWidth: 1
+                                    },
+                                    ticks: {
+                                        font: {
+                                            size: 13,
+                                            family: 'Raleway'
+                                        },
+                                        color: '#1A1A1A',
+                                        callback: function(value) {
+                                            return '¥' + value.toFixed(0);
+                                        }
+                                    }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    title: {
+                                        display: true,
+                                        text: '消费笔数',
+                                        font: {
+                                            size: 14,
+                                            weight: 'bold',
+                                            family: 'Raleway'
+                                        },
+                                        color: '#2D6A4F'
+                                    },
+                                    grid: {
+                                        drawOnChartArea: false
+                                    },
+                                    ticks: {
+                                        font: {
+                                            size: 13,
+                                            family: 'Raleway'
+                                        },
+                                        color: '#1A1A1A',
+                                        callback: function(value) {
+                                            return value + ' 笔';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                return () => {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                };
+            }, [monthlyData]);
+            
+            return (
+                <section className="pt-32 pb-20 px-8">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="grid md:grid-cols-2 gap-16 items-center">
+                            {/* Left: Title */}
+                            <div className="space-y-8">
+                                <h1 className="text-6xl md:text-7xl font-bold text-primary leading-tight">
+                                    研发支出<br/>统计系统
+                                </h1>
+                                <p className="text-xl text-body font-normal leading-relaxed">
+                                    专业的 API 与软件消费记录管理平台，<br/>
+                                    为您的研发投入提供清晰的数据洞察。
+                                </p>
+                                <div className="flex items-center space-x-8 pt-6">
+                                    <div className="text-center">
+                                        <div className="text-4xl font-bold text-primary">{stats.totalCount}</div>
+                                        <div className="text-base text-body mt-2 font-medium">消费笔数</div>
+                                    </div>
+                                    <div className="w-px h-16 bg-primary"></div>
+                                    <div className="text-center">
+                                        <div className="text-4xl font-bold text-primary">¥{stats.totalAmount.toFixed(2)}</div>
+                                        <div className="text-base text-body mt-2 font-medium">总支出</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Right: Chart */}
+                            <div className="relative">
+                                <div className="bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-200">
+                                    <h3 className="text-2xl font-bold text-primary mb-6">月度支出趋势</h3>
+                                    <div style="height: 400px;">
+                                        <canvas ref={chartRef}></canvas>
+                                    </div>
+                                </div>
+                                <div className="absolute -bottom-8 -left-8 bg-white rounded-2xl shadow-xl p-8 max-w-xs border-2 border-primary">
+                                    <div className="text-base text-body mb-2 font-medium">平均支出</div>
+                                    <div className="text-3xl font-bold text-primary">¥{stats.avgAmount.toFixed(2)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        }
+        
+        // Service Cards (Stats Overview)
+        function ServiceCards({ stats }) {
+            const services = [
+                {
+                    title: '总支出',
+                    value: `¥${stats.totalAmount.toFixed(2)}`,
+                    description: '累计研发投入金额',
+                    bg: 'bg-soft-green',
+                    icon: (
+                        <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    )
+                },
+                {
+                    title: '消费笔数',
+                    value: stats.totalCount,
+                    description: '记录的交易数量',
+                    bg: 'bg-soft-pink',
+                    icon: (
+                        <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                    )
+                },
+                {
+                    title: '平均支出',
+                    value: `¥${stats.avgAmount.toFixed(2)}`,
+                    description: '单笔平均消费金额',
+                    bg: 'bg-soft-beige',
+                    icon: (
+                        <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    )
+                }
+            ];
+            
+            return (
+                <section id="overview" className="py-20 px-8">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="grid md:grid-cols-3 gap-10">
+                            {services.map((service, index) => (
+                                <div 
+                                    key={index}
+                                    className={`service-card ${service.bg} rounded-2xl p-10 cursor-pointer border-2 border-transparent hover:border-primary`}
+                                >
+                                    <div className="mb-6">{service.icon}</div>
+                                    <h3 className="text-base uppercase tracking-wider text-body mb-3 font-bold">
+                                        {service.title}
+                                    </h3>
+                                    <div className="text-5xl font-bold text-primary mb-3">
+                                        {service.value}
+                                    </div>
+                                    <p className="text-base text-body font-medium">
+                                        {service.description}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        }
+        
+        // Month Section Component
+        function MonthSection({ month, data, expenses }) {
+            const monthExpenses = expenses.filter(e => e.pay_time.startsWith(month));
+            
+            return (
+                <div className="bg-white rounded-2xl shadow-md border-2 border-gray-200 overflow-hidden mb-10">
+                    {/* Month Header */}
+                    <div className="bg-primary px-10 py-8 border-b-2 border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <h2 className="text-3xl font-bold text-white">{month}月</h2>
+                            </div>
+                            <div className="text-4xl font-bold text-white">
+                                ¥{data.total.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Category Breakdown */}
+                    <div className="bg-soft-green px-10 py-6 border-b-2 border-gray-200">
+                        <div className="flex flex-wrap gap-6">
+                            {Object.entries(data.categories).map(([category, amount]) => (
+                                <span key={category} className="text-base text-body font-medium">
+                                    <span className="font-bold">{category}</span>
+                                    <span className="text-primary ml-3">¥{amount.toFixed(2)}</span>
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {/* Expense List */}
+                    <div>
+                        {monthExpenses.map((expense) => (
+                            <ExpenseItem key={expense.id} expense={expense} />
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+        
+        // Expense Item Component
+        function ExpenseItem({ expense }) {
+            const [isEditing, setIsEditing] = useState(false);
+            const [remark, setRemark] = useState(expense.remark || '');
+            
+            const handleSave = async () => {
+                try {
+                    const response = await fetch(`/api/expense/${expense.id}/remark`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ remark })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        setIsEditing(false);
+                        expense.remark = remark;
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            };
+            
+            return (
+                <div className="expense-row px-10 py-8 border-b-2 border-gray-100 last:border-b-0">
+                    <div className="grid md:grid-cols-[120px_1fr_auto] gap-8 items-start">
+                        {/* Screenshot */}
+                        <div>
+                            {expense.screenshot_path ? (
+                                <img 
+                                    src={`/screenshots/${expense.screenshot_path}`}
+                                    alt="截图"
+                                    className="w-full h-28 object-cover rounded-xl shadow-md cursor-pointer hover:shadow-lg transition-shadow border-2 border-gray-200"
+                                />
+                            ) : (
+                                <div className="w-full h-28 bg-gray-200 rounded-xl flex items-center justify-center text-gray-500 text-sm font-medium border-2 border-gray-300">
+                                    无图
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Info */}
+                        <div className="space-y-3">
+                            <h3 className="text-xl font-bold text-primary">
+                                {expense.merchant_name}
+                            </h3>
+                            <p className="text-base text-body leading-relaxed font-medium">
+                                {expense.product_description || '无商品说明'}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-5 text-sm text-body font-medium">
+                                <span className="flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {expense.pay_time}
+                                </span>
+                                {expense.order_no && (
+                                    <span className="flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                                        </svg>
+                                        {expense.order_no.substring(0, 20)}...
+                                    </span>
+                                )}
+                                <span className="px-3 py-1.5 bg-primary text-white rounded-lg font-bold text-sm">
+                                    {expense.category}
+                                </span>
+                            </div>
+                            
+                            {/* Remark */}
+                            {!isEditing ? (
+                                <div className="flex items-center gap-3 mt-4">
+                                    {expense.remark ? (
+                                        <>
+                                            <span className="text-base text-body bg-soft-beige px-4 py-2 rounded-lg font-medium border-2 border-gray-200">
+                                                {expense.remark}
+                                            </span>
+                                            <button 
+                                                onClick={() => setIsEditing(true)}
+                                                className="text-sm text-primary hover:text-body transition-colors font-bold"
+                                            >
+                                                编辑
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button 
+                                            onClick={() => setIsEditing(true)}
+                                            className="text-sm text-primary hover:text-body transition-colors font-bold"
+                                        >
+                                            + 添加备注
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="mt-4 space-y-3">
+                                    <input 
+                                        type="text"
+                                        value={remark}
+                                        onChange={(e) => setRemark(e.target.value)}
+                                        placeholder="输入备注信息..."
+                                        className="w-full px-4 py-3 border-2 border-primary rounded-lg text-base focus:outline-none focus:border-body transition-colors font-medium"
+                                    />
+                                    <div className="flex gap-3">
+                                        <button 
+                                            onClick={handleSave}
+                                            className="px-6 py-2.5 bg-primary hover-primary text-white text-sm font-bold rounded-lg transition-colors"
+                                        >
+                                            保存
+                                        </button>
+                                        <button 
+                                            onClick={() => setIsEditing(false)}
+                                            className="px-6 py-2.5 bg-gray-200 text-body text-sm font-bold rounded-lg hover:bg-gray-300 transition-colors"
+                                        >
+                                            取消
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Amount */}
+                        <div className="text-right">
+                            <div className="text-3xl font-bold text-primary">
+                                -¥{expense.amount.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Main App Component
+        function App() {
+            const [stats, setStats] = useState({
+                totalAmount: 0,
+                totalCount: 0,
+                avgAmount: 0
+            });
+            const [monthlyData, setMonthlyData] = useState({});
+            const [expenses, setExpenses] = useState([]);
+            
+            useEffect(() => {
+                // Fetch stats
+                fetch('/api/stats')
+                    .then(r => r.json())
+                    .then(data => setStats({
+                        totalAmount: data.total_amount,
+                        totalCount: data.total_count,
+                        avgAmount: data.avg_amount
+                    }));
+                
+                // Fetch expenses
+                fetch('/api/expenses')
+                    .then(r => r.json())
+                    .then(data => {
+                        setExpenses(data.expenses);
+                        setMonthlyData(data.stats);
+                    });
+            }, []);
+            
+            return (
+                <div className="min-h-screen">
+                    <Navigation />
+                    <HeroSection stats={stats} monthlyData={monthlyData} />
+                    <ServiceCards stats={stats} />
+                    
+                    <section id="expenses" className="py-20 px-8">
+                        <div className="max-w-7xl mx-auto">
+                            <h2 className="text-5xl font-bold text-primary mb-16 text-center">
+                                支出记录
+                            </h2>
+                            {Object.entries(monthlyData).map(([month, data]) => (
+                                <MonthSection 
+                                    key={month}
+                                    month={month}
+                                    data={data}
+                                    expenses={expenses}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                    
+                    {/* Footer */}
+                    <footer className="bg-primary py-16 px-8 mt-20">
+                        <div className="max-w-7xl mx-auto text-center">
+                            <p className="text-white text-base font-medium">
+                                © 2026 数豆科技研发支出统计系统
+                            </p>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+        
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
